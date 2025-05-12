@@ -41,9 +41,10 @@ def test(main_args):
     
     wandb.init(project='Test')
     
-    price_test = np.array([])
-    pv_test = np.array([])
-    load_test = np.array([])
+    data_test = np.load('scenarios/pjm/2021.npy')
+    price_test = np.load('scenarios/california iso/2020.8.npy')[:, 181:]
+    load_test = np.load('scenarios/uk power network/load.npy')[:, 547:]
+    pv_test = data_test[:, 1, 28: 212]
     
     costs = np.zeros(6)
 
@@ -62,15 +63,13 @@ def test(main_args):
                     'not full charged': constraint_value, 'out of constraints': costs[3], 'total not full charged': costs[4], 'loose constraints': costs[5]}
         print(log_data)
         wandb.log(log_data)
-    print(1 - costs[0] / costs[2], 1 - costs[1] / costs[2])
-    print(costs[0]/costs[1], costs[2]/costs[1])
-    print(costs[4]/(price_test[0, :].size - 2))
+    print("Cost reduction of BC and TO compared to UC: ", 1 - costs[0] / costs[2], 1 - costs[1] / costs[2])
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='BC')
     parser.add_argument('--project', type=str, default='EVCS', help='save to project/name')
-    parser.add_argument('--name', type=str, default='result_IL/lstm', help='save to project/name')
+    parser.add_argument('--name', type=str, default='trial', help='save to project/name')
     parser.add_argument('--resume', type=int, default=0, help='resume at # of checkpoint.')
     parser.add_argument('--num_traj', type=int, default=0, help='number of trajectories or scenarios')
     parser.add_argument('--adam', action='store_false', help='use torch.optim.Adam() optimizer')
