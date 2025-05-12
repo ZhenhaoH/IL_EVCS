@@ -4,13 +4,12 @@ import torch
 import argparse
 import random
 import wandb
-import time
 
 from agent import Agent
 
 
 def train(main_args):
-    project, name, epochs, num_traj, tolerance = main_args.project, main_args.name, main_args.epochs, main_args.num_traj, main_args.tolerance
+    project, name, epochs, tolerance = main_args.project, main_args.name, main_args.epochs, main_args.tolerance
     save_name = '{}/{}'.format(project, name)
     args = {
         'save_name': save_name,
@@ -52,14 +51,16 @@ def train(main_args):
     traj_len_val = []
     
     # replace with your data
-    price_train = np.array([])
-    pv_train = np.array([])
-    load_train = np.array([])
+    data_train = np.append(np.load('scenarios/pjm/2019.npy'), np.load('scenarios/pjm/2020.npy'), axis=2)
+    data_train = np.append(data_train, np.load('scenarios/pjm/2021.npy'), axis=2)
+    price_train = np.append(np.load('scenarios/california iso/2019.8.npy'), np.load('scenarios/california iso/2020.8.npy'), axis=1)[:, : 550]
+    load_train = np.load('scenarios/uk power network/load.npy')[:, :550]
+    pv_train = data_train[:, 1, 212: 762]
+    samp = random.sample(range(0, price_train[0, :].size), 542)
+    price_val = price_train[:, samp]
+    pv_val = pv_train[:, samp]
+    load_val = load_train[:, samp]
     
-    price_val = np.array([])
-    pv_val = np.array([])
-    load_val = np.array([])
-
     for n in range(price_train[0, :].size - 4):
         price = price_train[:, n: n+5].flatten('F')
         pv = pv_train[:, n: n+5].flatten('F')
@@ -74,10 +75,8 @@ def train(main_args):
     
     best = inf
     for epoch in range(epochs):
-        t1 = time.time()
         loss, lr = agent.train(trajectories, traj_len)
         loss_val = agent.val(trajectories_val, traj_len_val)
-        t += time.time()-t1
         log_data = {'loss (train)': loss, 'learning rate': lr, 'loss (val)': loss_val}
         print(log_data)
         wandb.log(log_data)
@@ -101,7 +100,6 @@ if __name__ == "__main__":
     parser.add_argument('--name', type=str, default='trial', help='save to project/name')
     parser.add_argument('--resume', type=int, default=0, help='resume at # of checkpoint.')
     parser.add_argument('--epochs', type=int, default=2000, help='number of epochs in training')
-    parser.add_argument('--num_traj', type=int, default=0, help='number of trajectories or scenarios')
     parser.add_argument('--adam', action='store_false', help='use torch.optim.Adam() optimizer')
     parser.add_argument('--tolerance', type=int, default=200, help='tolerance for early stopping')
     args = parser.parse_args()

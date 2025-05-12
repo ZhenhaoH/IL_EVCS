@@ -41,9 +41,10 @@ def test(main_args):
     
     wandb.init(project='Test')
     
-    price_test = np.array([])
-    pv_test = np.array([])
-    load_test = np.array([])
+    data_test = np.load('scenarios/pjm/2021.npy')
+    price_test = np.load('scenarios/california iso/2020.8.npy')[:, 181:]
+    load_test = np.load('scenarios/uk power network/load.npy')[:, 547:]
+    pv_test = data_test[:, 1, 28: 212]
     
     costs = np.zeros(6)
 
