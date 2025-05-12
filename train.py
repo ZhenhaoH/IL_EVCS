@@ -22,8 +22,8 @@ def train(main_args):
         'momentum': 0.9,
         'train': True,
     }
-    if False & torch.cuda.is_available():
-        device = torch.device('cuda:1')
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
         print('[torch] cuda is used.')
     else:
         device = torch.device('cpu')
